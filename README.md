@@ -23,20 +23,19 @@
 ## Table of contents
 
 1. [Run it](#run-it)
-2. [Put it online](#put-it-online)
-3. [Using Screen Cast](#using-screen-cast)
-4. [Configuration](#configuration)
-5. [Services](#services)
-6. [Hardware and network notes](#hardware-and-network-notes)
-7. [Architecture](#architecture)
-8. [Design decisions](#design-decisions)
-9. [Project layout](#project-layout)
-10. [Testing](#testing)
-11. [Local development](#local-development)
-12. [Extending](#extending)
-13. [Troubleshooting](#troubleshooting)
-14. [Known limitations](#known-limitations)
-15. [Credits](#credits)
+2. [Using Screen Cast](#using-screen-cast)
+3. [Configuration](#configuration)
+4. [Services](#services)
+5. [Hardware and network notes](#hardware-and-network-notes)
+6. [Architecture](#architecture)
+7. [Design decisions](#design-decisions)
+8. [Project layout](#project-layout)
+9. [Testing](#testing)
+10. [Local development](#local-development)
+11. [Extending](#extending)
+12. [Troubleshooting](#troubleshooting)
+13. [Known limitations](#known-limitations)
+14. [Credits](#credits)
 
 
 
@@ -58,17 +57,6 @@ Open **http://localhost:3000**.
 | Viewer, any modern browser on any OS | Watches with nothing to install |
 | Host on a phone or tablet | Not possible, mobile browsers cannot share their screen |
 
-
-
-## Put it online
-
-Free and about five minutes, one time. Any host that runs Node.js with WebSocket support and HTTPS works; these steps use [Render](https://render.com).
-
-1. Create a GitHub repository and upload everything in this folder (`server.js`, `package.json`, `render.yaml`, the `public/` folder). Do not upload `node_modules`.
-2. On Render choose **New → Web Service**, pick the repository, and click **Create**. `render.yaml` already holds the settings.
-3. When the build finishes you get a link such as `https://screencast-xxxx.onrender.com`. That is your site; HTTPS is automatic, which screen sharing requires.
-
-Free instances sleep when idle, so the first visit after a break can take 30-60 seconds to wake. You can attach your own domain later in Render's settings.
 
 
 
