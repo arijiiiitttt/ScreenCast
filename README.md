@@ -1,6 +1,6 @@
 <p align="center">
   <a>
-    <img alt="screen cast logo" src="https://img.shields.io/badge/%F0%9F%96%A5%EF%B8%8F-Screen%20Cast-4f8cff?style=for-the-badge&labelColor=141b29" height="48">
+    <img alt="screen cast logo" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1726'/%3E%3Crect x='5' y='9' width='3' height='14' fill='%23e8c71e'/%3E%3Crect x='8' y='9' width='3' height='14' fill='%2322b8cc'/%3E%3Crect x='11' y='9' width='3' height='14' fill='%2334b35e'/%3E%3Crect x='14' y='9' width='3' height='14' fill='%23c93aa0'/%3E%3Crect x='17' y='9' width='3' height='14' fill='%23d93a2d'/%3E%3Crect x='20' y='9' width='3' height='14' fill='%232c4bd8'/%3E%3Crect x='23' y='9' width='4' height='14' fill='%23d9d9d9'/%3E%3C/svg%3E" height="48">
   </a>
 </p>
 <p align="center">
