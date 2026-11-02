@@ -170,25 +170,6 @@ flowchart LR
     STUN -.-> V1
 ```
 
-```
-Host clicks "Start a room"
-        ↓
-Browser asks which screen to share (getDisplayMedia)
-        ↓
-Host opens a WebSocket and registers the room (code + password hash)
-        ↓
-Viewer opens the site, enters code + password
-        ↓
-Server checks the password, assigns the viewer an id, tells the host "viewer 3 joined"
-        ↓
-Host creates one WebRTC connection per viewer and sends an offer through the server
-        ↓
-Viewer answers; both sides swap network candidates through the server
-        ↓
-Video and audio flow directly host → viewer; the server is no longer involved
-        ↓
-Host stops (or closes the tab): server tells every viewer "ended" and deletes the room
-```
 
 **Signaling messages**
 
