@@ -1,6 +1,6 @@
 <p align="center">
   <a>
-    <img alt="screen cast logo" src="/public/logo/tv.png" height="48">
+    <img alt="screen cast logo" src="/public/logo/tv.png" height="150">
   </a>
 </p>
 <p align="center">
