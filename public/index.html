@@ -1,0 +1,666 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Screen Cast - your screen on every screen</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230e1726'/%3E%3Crect x='5' y='9' width='3' height='14' fill='%23e8c71e'/%3E%3Crect x='8' y='9' width='3' height='14' fill='%2322b8cc'/%3E%3Crect x='11' y='9' width='3' height='14' fill='%2334b35e'/%3E%3Crect x='14' y='9' width='3' height='14' fill='%23c93aa0'/%3E%3Crect x='17' y='9' width='3' height='14' fill='%23d93a2d'/%3E%3Crect x='20' y='9' width='3' height='14' fill='%232c4bd8'/%3E%3Crect x='23' y='9' width='4' height='14' fill='%23d9d9d9'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f3f4f6;--panel:#fff;--ink:#0e1726;--ink2:#37425a;--mut:#5b667c;--line:#c5ccd8;
+  --yel:#ffc800;--yel-soft:#fff2b3;--blue:#2147d6;--red:#e5372f;--bad:#c4241c;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:var(--paper);color:var(--ink);font-family:Archivo,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button,input{font-family:inherit}
+.ic{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.cond{font-stretch:62%;font-weight:800}
+
+/* color-bar strip + logo */
+.strip{display:flex;height:12px}
+.strip i,.bars i{display:block;flex:1}
+.page{max-width:1160px;margin:0 auto;padding:22px 32px 80px}
+.top{display:flex;align-items:center;justify-content:space-between;height:48px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:21px;letter-spacing:-.01em}
+.logo{display:flex;width:36px;height:26px;border:2px solid var(--ink);border-radius:6px;overflow:hidden}
+.logo i{display:block;flex:1}
+
+/* buttons: keys you press */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:54px;padding:0 24px;border-radius:10px;border:2px solid var(--ink);background:#fff;color:var(--ink);font-weight:700;font-size:17px;cursor:pointer;white-space:nowrap;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s,background .12s}
+.btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
+.btn:active:not(:disabled){transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.btn:disabled{opacity:.45;cursor:default;box-shadow:none;transform:translateY(4px)}
+.btn:focus-visible,.back:focus-visible,.sbtn:focus-visible,.tab:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.btn-y{background:var(--yel)}
+.btn-y:hover:not(:disabled){background:#ffd21f}
+.btn-red{background:#fff;color:var(--bad);border-color:var(--bad);box-shadow:0 4px 0 var(--bad)}
+.btn-red:hover:not(:disabled){background:var(--red);color:#fff;box-shadow:0 5px 0 var(--bad)}
+.btn-block{width:100%}
+.btn-sm{height:46px;padding:0 18px;font-size:16px}
+.btn-sq{width:54px;padding:0}
+.btn-sm.btn-sq{width:46px}
+.back{display:inline-flex;align-items:center;gap:8px;background:none;border:0;color:var(--ink2);font-weight:700;font-size:16px;cursor:pointer;padding:8px 0;margin:26px 0 0}
+.back:hover{color:var(--ink)}
+
+/* fields */
+label.l{display:block;font-size:15px;font-weight:700;margin:0 0 8px}
+.fld{margin-bottom:20px}
+.inp{width:100%;height:54px;padding:0 16px;border-radius:10px;border:2px solid #aab3c2;background:#fff;color:var(--ink);font-size:18px;font-weight:600;outline:none;transition:border-color .12s,box-shadow .12s}
+.inp::placeholder{color:#8b95a7;font-weight:400}
+.inp:hover{border-color:#6f7b90}
+.inp:focus{border-color:var(--ink);box-shadow:0 0 0 4px rgba(255,200,0,.55)}
+.inrow{display:flex;gap:12px}
+.inrow .inp{flex:1;min-width:0}
+.msg{min-height:24px;margin-top:14px;font-size:15.5px;font-weight:600;color:var(--bad)}
+.hint{color:var(--mut);font-weight:400}
+
+/* ---------- HOME ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,440px);gap:56px;align-items:center;padding:34px 0 44px}
+@media(max-width:960px){.hero{grid-template-columns:1fr;gap:30px;padding:22px 0 30px}}
+h1{margin:0;font-size:clamp(64px,9.6vw,128px);line-height:.86;letter-spacing:-.015em}
+.lede{font-size:20px;color:var(--ink2);max-width:25em;margin:24px 0 0}
+.tc{position:relative;aspect-ratio:16/9;display:flex;flex-direction:column;overflow:hidden;border:2px solid var(--ink);border-radius:14px;background:#111;box-shadow:0 8px 0 var(--ink)}
+.tc-top{flex:0 0 66%;display:flex}
+.tc-mid{flex:0 0 9%;display:flex}
+.tc-low{flex:1;display:flex}
+.tc i{display:block;flex:1}
+.tc-plate{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:12px;background:var(--ink);color:#fff;padding:11px 20px;border-radius:9px;border:2px solid #fff;font-weight:800;font-size:clamp(17px,2.2vw,24px);white-space:nowrap}
+.tc-live{position:absolute;left:14px;top:14px;display:flex;align-items:center;gap:8px;background:var(--ink);color:#fff;padding:5px 12px 5px 10px;border-radius:7px;font-weight:800;font-size:14px}
+.lamp{width:11px;height:11px;border-radius:50%;background:var(--red);flex:none}
+.lamp.blink{animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.3}}
+.rows{border-bottom:2px solid var(--ink)}
+.row{display:grid;grid-template-columns:210px minmax(0,1fr) auto;gap:30px;align-items:center;padding:28px 0;border-top:2px solid var(--ink)}
+@media(max-width:960px){.row{grid-template-columns:1fr;gap:14px;padding:24px 0}}
+.rt{margin:0;font-size:58px;line-height:.9}
+.rd{margin:0;color:var(--ink2);font-size:17px;max-width:30em}
+.wform{display:flex;gap:12px;flex-wrap:wrap}
+.wform .inp{width:190px}
+@media(max-width:560px){.wform .inp,.wform .btn{width:100%}}
+@media(max-width:960px){.row .btn{width:100%}.wform{display:grid;grid-template-columns:1fr 1fr}.wform .btn{grid-column:1/-1}}
+@media(max-width:560px){.wform{grid-template-columns:1fr}}
+.foot{margin:18px 0 0;color:var(--mut);font-size:14.5px}
+.rowmsg{grid-column:1/-1;min-height:0;margin:-8px 0 0}
+.rowmsg:empty{display:none}
+
+/* ---------- SETUP ---------- */
+.setup{max-width:660px}
+.setup h2{margin:14px 0 30px;font-size:clamp(52px,8vw,84px);line-height:.88}
+.opts{display:grid;gap:12px;margin-bottom:8px}
+.opt{position:relative;display:block;cursor:pointer}
+.opt input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.opt .box{display:grid;grid-template-columns:24px 1fr;gap:14px;align-items:start;border:2px solid #aab3c2;border-radius:12px;padding:16px 18px;background:#fff;transition:background .12s,border-color .12s,box-shadow .12s,transform .12s}
+.opt .dot{width:24px;height:24px;border-radius:50%;border:2px solid #8b95a7;display:grid;place-items:center;background:#fff;margin-top:1px}
+.opt .dot::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--ink);transform:scale(0);transition:transform .12s}
+.opt:hover .box{border-color:var(--ink)}
+.opt input:checked + .box{border-color:var(--ink);background:var(--yel-soft);box-shadow:0 4px 0 var(--ink);transform:translateY(-1px)}
+.opt input:checked + .box .dot{border-color:var(--ink)}
+.opt input:checked + .box .dot::after{transform:scale(1)}
+.opt input:focus-visible + .box{outline:3px solid var(--blue);outline-offset:3px}
+.opt b{display:block;font-size:18px;line-height:1.3}
+.opt .d{display:block;color:var(--ink2);font-size:15.5px;margin-top:2px}
+.rec{font-size:13px;font-weight:700;background:var(--ink);color:#fff;border-radius:6px;padding:2px 9px;margin-left:10px;vertical-align:2px}
+.switch{display:flex;align-items:center;gap:16px;margin:26px 0 30px;cursor:pointer}
+.switch input{position:absolute;opacity:0;width:0;height:0}
+.switch .track{width:54px;height:32px;border-radius:99px;border:2px solid var(--ink);background:#fff;position:relative;flex:none;transition:background .15s}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--ink);transition:transform .15s}
+.switch input:checked + .track{background:var(--yel)}
+.switch input:checked + .track::after{transform:translateX(22px)}
+.switch input:focus-visible + .track{outline:3px solid var(--blue);outline-offset:3px}
+.switch .t{font-weight:700;line-height:1.3}
+.switch .t small{display:block;font-weight:400;color:var(--ink2);font-size:15px}
+
+/* ---------- LIVE (host) ---------- */
+.livebar{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:30px 0 26px}
+.livel{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.onair{display:flex;align-items:center;gap:14px;font-size:68px;line-height:.9}
+.onair .lamp{width:20px;height:20px;box-shadow:0 0 0 6px rgba(229,55,47,.18)}
+.viewers{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px}
+.live-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:32px;align-items:start}
+@media(max-width:940px){.live-grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:2px solid var(--ink);border-radius:16px;padding:28px}
+.cap{font-size:15px;font-weight:700;color:var(--ink2);margin:0 0 10px}
+.tiles{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:28px}
+.tile{width:clamp(42px,6.4vw,60px);height:clamp(56px,8.6vw,80px);display:grid;place-items:center;border:2px solid var(--ink);border-radius:10px;background:var(--yel);font-size:clamp(28px,4.4vw,44px);font-weight:800;line-height:1;text-transform:uppercase;box-shadow:0 4px 0 var(--ink)}
+.pw{font-size:clamp(30px,4.2vw,42px);font-weight:800;letter-spacing:.14em;margin:0 0 28px;word-break:break-all}
+.linkrow{display:flex;gap:12px;margin-bottom:16px}
+.linkbox{flex:1;min-width:0;height:46px;border:2px solid var(--line);background:#f6f7f9;border-radius:10px;padding:0 14px;display:flex;align-items:center;font-size:15px;color:var(--ink2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.copyrow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:18px}
+.note{margin:18px 0 0;color:var(--mut);font-size:14.5px}
+video.prev{width:100%;aspect-ratio:16/9;background:#0b0e14;border:2px solid var(--ink);border-radius:12px;object-fit:contain;display:block;box-shadow:0 6px 0 var(--ink)}
+.pmeta{margin:22px 0 0;font-weight:700;font-size:15.5px}
+
+/* ---------- VIEWER ---------- */
+#v-stage{position:fixed;inset:0;background:#0b0e14;z-index:20}
+#stage{position:absolute;inset:0}
+#vid{width:100%;height:100%;object-fit:contain;background:#0b0e14;display:block}
+.bar{position:absolute;left:0;right:0;top:0;display:flex;gap:12px;align-items:center;padding:16px 18px;transition:opacity .3s,transform .3s;z-index:3}
+.bar.hide{opacity:0;transform:translateY(-8px);pointer-events:none}
+.bar .sp{flex:1}
+.spill{display:inline-flex;align-items:center;gap:10px;height:46px;padding:0 16px;border-radius:10px;background:#fff;border:2px solid var(--ink);color:var(--ink);font-weight:800;font-size:16px;box-shadow:0 4px 0 var(--ink)}
+.spill .lamp{background:#98a2b3}
+.spill .lamp.live{background:var(--red);animation:blink 1.6s ease-in-out infinite}
+.sbtn{display:inline-flex;align-items:center;gap:9px;height:46px;padding:0 16px;border-radius:10px;border:2px solid var(--ink);background:#fff;color:var(--ink);font-weight:700;font-size:16px;cursor:pointer;box-shadow:0 4px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+.sbtn:hover{transform:translateY(-1px);box-shadow:0 5px 0 var(--ink)}
+.sbtn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--ink)}
+.sbtn.leave{background:var(--red);color:#fff}
+.over{position:absolute;inset:0;z-index:2}
+.over .tc{position:absolute;inset:0;aspect-ratio:auto;border:0;border-radius:0;box-shadow:none}
+.over .tc.off{filter:grayscale(1) brightness(.55)}
+.ocard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(440px,calc(100% - 40px));background:#fff;border:2px solid var(--ink);border-radius:14px;padding:26px 28px;text-align:center;box-shadow:0 8px 0 var(--ink)}
+.ocard .ot{font-weight:800;font-size:22px;line-height:1.25;display:flex;align-items:center;justify-content:center;gap:12px}
+.ocard .btn{margin-top:20px}
+@media(max-width:600px){.sbtn span{display:none}.sbtn{padding:0 14px}.page{padding:18px 18px 60px}}
+
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,16px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:10px;font-size:16px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50;border:2px solid #fff}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-max" viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></symbol>
+  <symbol id="i-volume" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="m23 9-6 6M17 9l6 6"/></symbol>
+  <symbol id="i-exit" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16M16 16h5v5"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8V4z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+</svg>
+
+<div class="strip" id="strip"></div>
+
+<!-- HOME -->
+<div class="page" id="v-home">
+  <div class="top"><div class="brand"><span class="logo"></span>Screen Cast</div></div>
+
+  <section class="hero">
+    <div>
+      <h1 class="cond">Your screen on every screen.</h1>
+      <p class="lede">Start a room, send the code, and everyone watches in their browser. Nothing to install.</p>
+    </div>
+    <div class="tc" id="hero-tc" role="img" aria-label="A TV test pattern with a Live light">
+      <div class="tc-live"><span class="lamp blink"></span>Live</div>
+      <div class="tc-plate"><span class="logo" style="width:30px;height:21px;border-color:#fff"></span>Screen Cast</div>
+    </div>
+  </section>
+
+  <section class="rows">
+    <div class="row" id="row-share">
+      <h2 class="rt cond">Share</h2>
+      <p class="rd">Show this computer&rsquo;s screen. Your browser lets you pick the whole screen, one window or one tab.</p>
+      <div><button class="btn btn-y" id="go-host"><svg class="ic"><use href="#i-play"/></svg>Start a room</button></div>
+    </div>
+    <div class="row" id="row-watch">
+      <h2 class="rt cond">Watch</h2>
+      <p class="rd">Got a room code and password? Type them in.</p>
+      <div class="wform">
+        <input class="inp" type="text" id="j-room" aria-label="Room code" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Room code">
+        <input class="inp" type="password" id="j-pass" aria-label="Password" autocomplete="off" placeholder="Password">
+        <button class="btn btn-y" id="j-go"><svg class="ic"><use href="#i-eye"/></svg>Watch</button>
+      </div>
+      <div class="msg rowmsg" id="j-msg"></div>
+    </div>
+  </section>
+  <p class="foot" id="foot">Sharing works in Chrome, Edge, Firefox and Safari on a computer. Phones and tablets can watch but not share.</p>
+</div>
+
+<!-- HOST SETUP -->
+<div class="page" id="v-host" hidden>
+  <div class="top"><div class="brand"><span class="logo"></span>Screen Cast</div></div>
+  <div class="setup">
+    <button class="back" id="h-back"><svg class="ic"><use href="#i-back"/></svg>Back</button>
+    <h2 class="cond">Set up your room.</h2>
+
+    <div class="fld"><label class="l" for="h-room">Room code</label>
+      <div class="inrow"><input class="inp" type="text" id="h-room" autocomplete="off" autocapitalize="none" spellcheck="false">
+      <button class="btn btn-sq" id="h-newroom" type="button" title="Make a new code" aria-label="Make a new code"><svg class="ic"><use href="#i-refresh"/></svg></button></div></div>
+
+    <div class="fld"><label class="l" for="h-pass">Password <span class="hint">(leave empty for none)</span></label>
+      <div class="inrow"><input class="inp" type="text" id="h-pass" autocomplete="off" spellcheck="false">
+      <button class="btn btn-sq" id="h-newpass" type="button" title="Make a new password" aria-label="Make a new password"><svg class="ic"><use href="#i-refresh"/></svg></button></div></div>
+
+    <label class="l" style="margin-top:8px">Video quality</label>
+    <div class="opts">
+      <label class="opt"><input type="radio" name="mode" value="sharp" checked><span class="box"><span class="dot"></span><span><b>Sharp<span class="rec">Best for most uses</span></b><span class="d">Crisp text and detail at 30 frames per second. Good for slides, documents and code.</span></span></span></label>
+      <label class="opt"><input type="radio" name="mode" value="smooth"><span class="box"><span class="dot"></span><span><b>Smooth</b><span class="d">Up to 60 frames per second for video and animation. Needs a fast internet connection.</span></span></span></label>
+      <label class="opt"><input type="radio" name="mode" value="max"><span class="box"><span class="dot"></span><span><b>Maximum</b><span class="d">Up to 100 frames per second. Only helps on 120 Hz or 144 Hz screens and uses the most data.</span></span></span></label>
+    </div>
+
+    <label class="switch"><input type="checkbox" id="h-audio"><span class="track"></span><span class="t">Share sound<small>Works when your browser offers audio for the screen or tab you pick.</small></span></label>
+
+    <button class="btn btn-y btn-block" id="h-start" style="height:60px;font-size:19px"><svg class="ic"><use href="#i-monitor"/></svg>Choose a screen and go live</button>
+    <div class="msg" id="h-msg"></div>
+  </div>
+</div>
+
+<!-- HOSTING -->
+<div class="page" id="v-hosting" hidden>
+  <div class="top"><div class="brand"><span class="logo"></span>Screen Cast</div></div>
+  <div class="livebar">
+    <div class="livel">
+      <div class="onair cond"><span class="lamp blink"></span>Live</div>
+      <span class="viewers"><svg class="ic"><use href="#i-users"/></svg><span id="hv-count">0 viewers</span></span>
+    </div>
+    <button class="btn btn-red btn-sm" id="hv-stop"><svg class="ic"><use href="#i-stop"/></svg>Stop sharing</button>
+  </div>
+  <div class="live-grid">
+    <div class="panel">
+      <p class="cap">Room code</p>
+      <div class="tiles" id="hv-room"></div>
+      <p class="cap">Password</p>
+      <div class="pw" id="hv-pass"></div>
+      <p class="cap">Link</p>
+      <div class="linkrow"><div class="linkbox" id="hv-link"></div><button class="btn btn-sm btn-sq" data-copy="link" title="Copy link" aria-label="Copy link"><svg class="ic"><use href="#i-copy"/></svg></button></div>
+      <button class="btn btn-y btn-block" id="hv-copy2"><svg class="ic"><use href="#i-link"/></svg>Copy link with password</button>
+      <div class="copyrow">
+        <button class="btn btn-sm" data-copy="room"><svg class="ic"><use href="#i-copy"/></svg>Copy code</button>
+        <button class="btn btn-sm" data-copy="pass"><svg class="ic"><use href="#i-copy"/></svg>Copy password</button>
+      </div>
+      <p class="note" style="margin-bottom:0">Anyone who opens the link with the password joins straight away.</p>
+    </div>
+    <div>
+      <p class="cap">What viewers see</p>
+      <video class="prev" id="hv-prev" autoplay muted playsinline></video>
+      <p class="pmeta" id="hv-mode"></p>
+      <p class="note" style="margin-top:6px">Share a different window or screen from this page, or the preview shows itself inside itself.</p>
+    </div>
+  </div>
+</div>
+
+<!-- VIEWER STAGE -->
+<div id="v-stage" hidden>
+  <div id="stage">
+    <video id="vid" autoplay playsinline muted></video>
+    <div class="over" id="over">
+      <div class="tc" id="over-tc"></div>
+      <div class="ocard"><div class="ot"><span class="lamp blink" id="over-lamp"></span><span id="over-txt">Connecting to the host</span></div><button class="btn btn-y" id="over-btn" hidden></button></div>
+    </div>
+    <div class="bar" id="bar">
+      <span class="spill"><span class="lamp" id="st-dot"></span><span id="st-txt">Connecting</span></span>
+      <span class="sp"></span>
+      <button class="sbtn" id="st-mute" hidden></button>
+      <button class="sbtn" id="st-full"><svg class="ic"><use href="#i-max"/></svg><span>Full screen</span></button>
+      <button class="sbtn leave" id="st-leave"><svg class="ic"><use href="#i-exit"/></svg><span>Leave</span></button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  var ICE = [];
+
+  // kbps values: min / start / max bitrate per viewer
+  var MODES = {
+    sharp:  { fps: 30,  hint: 'detail', min: 1500, start: 4000, max: 8000,  label: 'Sharp, 30 frames per second' },
+    smooth: { fps: 60,  hint: 'motion', min: 2500, start: 5000, max: 12000, label: 'Smooth, up to 60 frames per second' },
+    max:    { fps: 100, hint: 'motion', min: 3000, start: 6000, max: 15000, label: 'Maximum, up to 100 frames per second' }
+  };
+
+  /* TV test pattern + colour bars (the look of the whole site) */
+  var BARS = ['#d9d9d9', '#e8c71e', '#22b8cc', '#34b35e', '#c93aa0', '#d93a2d', '#2c4bd8'];
+  function fill(html) { return html; }
+  function barsHtml(cols, extra) { return cols.map(function (c) { return '<i style="background:' + c + '"></i>'; }).join(''); }
+  $('strip').innerHTML = barsHtml(BARS);
+  Array.prototype.forEach.call(document.querySelectorAll('.logo'), function (el) { el.innerHTML = barsHtml(BARS); });
+  function testCard(el) {
+    el.insertAdjacentHTML('afterbegin',
+      '<div class="tc-top">' + barsHtml(BARS) + '</div>' +
+      '<div class="tc-mid">' + barsHtml(['#2c4bd8', '#111', '#c93aa0', '#111', '#22b8cc', '#111', '#d9d9d9']) + '</div>' +
+      '<div class="tc-low"><i style="background:#0b2a6f;flex:1.3"></i><i style="background:#fff;flex:1.3"></i><i style="background:#3a1070;flex:1.3"></i><i style="background:#111;flex:2"></i><i style="background:#1d1d1d"></i><i style="background:#2b2b2b"></i><i style="background:#3a3a3a"></i><i style="background:#111;flex:1.4"></i></div>');
+  }
+  testCard($('hero-tc'));
+  testCard($('over-tc'));
+
+  function show(v) { ['home', 'host', 'hosting', 'stage'].forEach(function (x) { $('v-' + x).hidden = (x !== v); }); window.scrollTo(0, 0); }
+
+  function rand(n, chars) {
+    var a = new Uint32Array(n), s = '';
+    (window.crypto || window.msCrypto).getRandomValues(a);
+    for (var i = 0; i < n; i++) s += chars.charAt(a[i] % chars.length);
+    return s;
+  }
+  var toastT;
+  function toast(t) {
+    var el = $('toast'); el.textContent = t; el.classList.add('on');
+    clearTimeout(toastT); toastT = setTimeout(function () { el.classList.remove('on'); }, 1800);
+  }
+  function copy(text, what) {
+    function ok() { toast(what + ' copied'); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, function () { toast('Could not copy'); });
+    else { var t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); ok(); } catch (e) { toast('Could not copy'); } document.body.removeChild(t); }
+  }
+  function ic(name) { return '<svg class="ic"><use href="#i-' + name + '"/></svg>'; }
+  function tiles(el, text) {
+    el.textContent = '';
+    text.split('').forEach(function (ch) { var s = document.createElement('span'); s.className = 'tile'; s.textContent = ch; el.appendChild(s); });
+  }
+
+  // Phones and tablets cannot share their screen: say so instead of failing later.
+  if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) {
+    $('go-host').disabled = true;
+    $('row-share').parentNode.insertBefore($('row-watch'), $('row-share'));
+    $('foot').textContent = 'This device can watch but cannot share its screen. To share, open this page in Chrome, Edge, Firefox or Safari on a computer.';
+  }
+
+  /* Ask the sending browser for a higher starting/minimum bitrate so the picture
+     does not start (or stay) blurry while the network estimate warms up. */
+  function boostSdp(sdp, m) {
+    var extra = 'x-google-min-bitrate=' + m.min + ';x-google-start-bitrate=' + m.start + ';x-google-max-bitrate=' + m.max;
+    var lines = sdp.split(/\r?\n/), inVideo = false, names = {}, hasFmtp = {}, out = [];
+    lines.forEach(function (l) {
+      if (l.indexOf('m=') === 0) inVideo = l.indexOf('m=video') === 0;
+      if (!inVideo) return;
+      var r = /^a=rtpmap:(\d+) ([^\/]+)/.exec(l); if (r) names[r[1]] = r[2].toLowerCase();
+      var f = /^a=fmtp:(\d+) /.exec(l); if (f) hasFmtp[f[1]] = true;
+    });
+    function ok(pt) { var n = names[pt]; return n && n !== 'rtx' && n !== 'red' && n !== 'ulpfec' && n.indexOf('flexfec') !== 0; }
+    inVideo = false;
+    lines.forEach(function (l) {
+      if (l.indexOf('m=') === 0) inVideo = l.indexOf('m=video') === 0;
+      if (inVideo) {
+        var f = /^a=fmtp:(\d+) (.*)$/.exec(l);
+        if (f && ok(f[1]) && l.indexOf('x-google-min-bitrate') < 0) { out.push(l + ';' + extra); return; }
+        out.push(l);
+        var r = /^a=rtpmap:(\d+) /.exec(l);
+        if (r && ok(r[1]) && !hasFmtp[r[1]]) out.push('a=fmtp:' + r[1] + ' ' + extra);
+        return;
+      }
+      out.push(l);
+    });
+    return out.join('\r\n');
+  }
+
+  /* ---------------- HOST ---------------- */
+  var hostMode = MODES.sharp, hostWs = null, hostStream = null, peers = {}, hostRoom = '', hostPass = '';
+  var ROOM_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789', PASS_CHARS = '23456789';
+
+  $('go-host').onclick = function () {
+    $('h-room').value = rand(6, ROOM_CHARS);
+    $('h-pass').value = rand(6, PASS_CHARS);
+    $('h-msg').textContent = '';
+    $('h-start').disabled = false;
+    show('host');
+  };
+  $('h-newroom').onclick = function () { $('h-room').value = rand(6, ROOM_CHARS); };
+  $('h-newpass').onclick = function () { $('h-pass').value = rand(6, PASS_CHARS); };
+  $('h-back').onclick = function () { show('home'); };
+
+  $('h-start').onclick = function () {
+    var msg = $('h-msg'); msg.textContent = '';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+      msg.textContent = 'This browser cannot share its screen. Use Chrome, Edge, Firefox or Safari on a computer, and open the https:// address of this site.';
+      return;
+    }
+    hostRoom = $('h-room').value.trim().toLowerCase();
+    hostPass = $('h-pass').value;
+    if (!/^[a-z0-9][a-z0-9-]{2,31}$/.test(hostRoom)) { msg.textContent = 'The room code needs 3 to 32 letters, numbers or dashes.'; return; }
+    var sel = document.querySelector('input[name=mode]:checked');
+    hostMode = MODES[sel ? sel.value : 'sharp'];
+    $('h-start').disabled = true;
+    navigator.mediaDevices.getDisplayMedia({
+      video: { frameRate: { ideal: hostMode.fps }, width: { max: 2560 }, height: { max: 1440 } },
+      audio: $('h-audio').checked,
+      selfBrowserSurface: 'exclude'
+    }).then(function (s) {
+      hostStream = s;
+      var vt = s.getVideoTracks()[0];
+      try { vt.contentHint = hostMode.hint; } catch (e) {}
+      vt.onended = stopHosting;
+      openHostSocket();
+    }).catch(function (e) {
+      $('h-start').disabled = false;
+      msg.textContent = 'Sharing did not start. You closed the screen picker or the browser blocked it (' + (e && e.name || 'error') + '). Try again and pick a screen.';
+    });
+  };
+
+  function openHostSocket() {
+    hostWs = new WebSocket(WS_URL);
+    hostWs.onopen = function () { hostWs.send(JSON.stringify({ t: 'host', room: hostRoom, pass: hostPass })); };
+    hostWs.onmessage = function (ev) {
+      var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.t === 'hosting') {
+        ICE = m.ice || [];
+        tiles($('hv-room'), hostRoom);
+        $('hv-pass').textContent = hostPass || 'No password';
+        $('hv-link').textContent = linkFor(false);
+        $('hv-mode').textContent = hostMode.label;
+        $('hv-prev').srcObject = hostStream;
+        $('hv-count').textContent = '0 viewers';
+        show('hosting');
+      } else if (m.t === 'error') {
+        $('h-msg').textContent = m.msg;
+        $('h-start').disabled = false;
+        releaseHost();
+        show('host');
+      } else if (m.t === 'viewer') {
+        $('hv-count').textContent = plural(m.count);
+        addViewer(m.id);
+      } else if (m.t === 'gone') {
+        $('hv-count').textContent = plural(m.count);
+        dropViewer(m.id);
+      } else if (m.t === 'sig') {
+        var p = peers[m.from];
+        if (p) p.q = p.q.then(function () { return hostSignal(p, m.data); }).catch(function () {});
+      }
+    };
+    hostWs.onclose = function () {
+      if (hostStream && !$('v-hosting').hidden) { alert('The connection to the server was lost, so sharing has stopped.'); stopHosting(); }
+    };
+  }
+  function plural(n) { return n + (n === 1 ? ' viewer' : ' viewers'); }
+  function linkFor(withPass) {
+    return location.origin + '/?room=' + encodeURIComponent(hostRoom) + (withPass && hostPass ? '#pw=' + encodeURIComponent(hostPass) : '');
+  }
+
+  function addViewer(id) {
+    var pc = new RTCPeerConnection({ iceServers: ICE });
+    var p = { pc: pc, q: Promise.resolve() };
+    peers[id] = p;
+    hostStream.getTracks().forEach(function (t) { pc.addTrack(t, hostStream); });
+    pc.onicecandidate = function (e) {
+      if (e.candidate && hostWs && hostWs.readyState === 1) hostWs.send(JSON.stringify({ t: 'sig', to: id, data: { c: e.candidate } }));
+    };
+    pc.onconnectionstatechange = function () { if (pc.connectionState === 'failed') { try { pc.close(); } catch (e) {} } };
+    p.q = p.q.then(function () {
+      return pc.createOffer().then(function (o) { return pc.setLocalDescription(o); }).then(function () {
+        hostWs.send(JSON.stringify({ t: 'sig', to: id, data: { d: pc.localDescription } }));
+        pc.getSenders().forEach(function (s) {
+          if (s.track && s.track.kind === 'video' && s.getParameters) {
+            try {
+              var par = s.getParameters();
+              if (!par.encodings || !par.encodings.length) par.encodings = [{}];
+              par.encodings[0].maxBitrate = hostMode.max * 1000;
+              par.encodings[0].maxFramerate = hostMode.fps;
+              par.encodings[0].scaleResolutionDownBy = 1;
+              s.setParameters(par).catch(function () {});
+            } catch (e) {}
+          }
+        });
+      });
+    }).catch(function () {});
+  }
+  function hostSignal(p, data) {
+    if (data.d) {
+      var d = { type: data.d.type, sdp: data.d.sdp };
+      try { d.sdp = boostSdp(d.sdp, hostMode); } catch (e) {}
+      return p.pc.setRemoteDescription(d);
+    }
+    if (data.c) return p.pc.addIceCandidate(data.c).catch(function () {});
+  }
+  function dropViewer(id) {
+    var p = peers[id];
+    if (p) { try { p.pc.close(); } catch (e) {} delete peers[id]; }
+  }
+  function releaseHost() {
+    Object.keys(peers).forEach(dropViewer);
+    if (hostStream) { hostStream.getTracks().forEach(function (t) { t.onended = null; t.stop(); }); hostStream = null; }
+    if (hostWs) { hostWs.onclose = null; try { hostWs.close(); } catch (e) {} hostWs = null; }
+    $('hv-prev').srcObject = null;
+  }
+  function stopHosting() { releaseHost(); show('home'); }
+  $('hv-stop').onclick = stopHosting;
+  $('hv-copy2').onclick = function () { copy(linkFor(true), 'Link with password'); };
+  Array.prototype.forEach.call(document.querySelectorAll('[data-copy]'), function (b) {
+    b.onclick = function () {
+      var k = b.getAttribute('data-copy');
+      if (k === 'room') copy(hostRoom, 'Room code');
+      else if (k === 'pass') copy(hostPass, 'Password');
+      else copy(linkFor(false), 'Link');
+    };
+  });
+
+  /* ---------------- VIEWER ---------------- */
+  var vWs = null, vPc = null, vq = Promise.resolve(), vRoom = '', vPass = '', vEnded = false, hideTimer = null;
+  var vid = $('vid');
+
+  function joinMsg(t) { $('j-msg').textContent = t || ''; }
+
+  $('j-go').onclick = function () {
+    vRoom = $('j-room').value.trim().toLowerCase();
+    vPass = $('j-pass').value;
+    if (!vRoom) { joinMsg('Type the room code first.'); $('j-room').focus(); return; }
+    joinMsg('');
+    connectViewer();
+  };
+  ['j-room', 'j-pass'].forEach(function (id) { $(id).addEventListener('keydown', function (e) { if (e.key === 'Enter') $('j-go').click(); }); });
+
+  function setStatus(txt, live) { $('st-txt').textContent = txt; $('st-dot').className = 'lamp' + (live ? ' live' : ''); }
+  function overlay(txt, wait, btnText, btnFn) {
+    $('over').hidden = false;
+    $('over-txt').textContent = txt;
+    $('over-lamp').hidden = !wait;
+    $('over-tc').className = 'tc' + (wait ? '' : ' off');
+    var b = $('over-btn');
+    if (btnText) { b.hidden = false; b.textContent = btnText; b.onclick = btnFn; } else b.hidden = true;
+  }
+  function setMuteBtn() { $('st-mute').innerHTML = ic(vid.muted ? 'mute' : 'volume') + '<span>' + (vid.muted ? 'Turn sound on' : 'Mute') + '</span>'; }
+
+  function connectViewer() {
+    cleanupViewer();
+    vEnded = false;
+    var ws = new WebSocket(WS_URL);
+    vWs = ws;
+    var joined = false, errored = false;
+    ws.onopen = function () { ws.send(JSON.stringify({ t: 'join', room: vRoom, pass: vPass })); };
+    ws.onmessage = function (ev) {
+      var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+      if (m.t === 'joined') {
+        joined = true; ICE = m.ice || [];
+        show('stage');
+        setStatus('Connecting', false);
+        overlay('Connecting to the host', true);
+        vid.muted = true; $('st-mute').hidden = true;
+        wakeBar();
+      } else if (m.t === 'error') {
+        if (!joined) { errored = true; joinMsg(m.msg); show('home'); if (m.code === 'need-pass' || m.code === 'bad-pass') $('j-pass').focus(); }
+        try { ws.close(); } catch (e) {}
+      } else if (m.t === 'sig') {
+        vq = vq.then(function () { return viewerSignal(m.data); }).catch(function () {});
+      } else if (m.t === 'ended') {
+        vEnded = true;
+        setStatus('Off air', false);
+        overlay('The host stopped sharing.', false, 'Back to start', leave);
+      }
+    };
+    ws.onclose = function () {
+      if (vWs !== ws) return;
+      if (joined && !vEnded) {
+        setStatus('Disconnected', false);
+        overlay('The connection was lost.', false, 'Reconnect', connectViewer);
+      } else if (!joined && !errored && $('v-home').hidden === false) {
+        joinMsg('Could not reach the server. Check your internet connection and try again.');
+      }
+    };
+  }
+
+  function viewerSignal(data) {
+    if (data.d) {
+      if (vPc) { try { vPc.close(); } catch (e) {} }
+      var pc = vPc = new RTCPeerConnection({ iceServers: ICE });
+      pc.ontrack = function (e) {
+        var s = (e.streams && e.streams[0]) || new MediaStream([e.track]);
+        if (vid.srcObject !== s) vid.srcObject = s;
+        var p = vid.play(); if (p && p.catch) p.catch(function () {});
+        $('st-mute').hidden = s.getAudioTracks().length === 0;
+        setMuteBtn();
+      };
+      pc.onicecandidate = function (e) {
+        if (e.candidate && vWs && vWs.readyState === 1) vWs.send(JSON.stringify({ t: 'sig', data: { c: e.candidate } }));
+      };
+      pc.onconnectionstatechange = function () {
+        var s = pc.connectionState;
+        if (s === 'connected') setStatus('Live', true);
+        else if (s === 'connecting') setStatus('Connecting', false);
+        else if (s === 'failed') { setStatus('Failed', false); overlay('Could not connect to the host. This network may block direct video.', false, 'Try again', connectViewer); }
+        else if (s === 'disconnected') setStatus('Reconnecting', false);
+      };
+      return pc.setRemoteDescription(data.d)
+        .then(function () { return pc.createAnswer(); })
+        .then(function (a) { return pc.setLocalDescription(a); })
+        .then(function () { vWs.send(JSON.stringify({ t: 'sig', data: { d: pc.localDescription } })); });
+    }
+    if (data.c && vPc) return vPc.addIceCandidate(data.c).catch(function () {});
+  }
+
+  vid.addEventListener('playing', function () { $('over').hidden = true; setStatus('Live', true); });
+
+  function cleanupViewer() {
+    if (vPc) { try { vPc.close(); } catch (e) {} vPc = null; }
+    if (vWs) { var w = vWs; vWs = null; w.onclose = null; try { w.close(); } catch (e) {} }
+    vid.srcObject = null; vq = Promise.resolve();
+  }
+  function leave() {
+    cleanupViewer();
+    if (document.fullscreenElement || document.webkitFullscreenElement) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    show('home');
+  }
+  $('st-leave').onclick = leave;
+  $('st-mute').onclick = function () { vid.muted = !vid.muted; setMuteBtn(); };
+  $('st-full').onclick = function () {
+    var el = $('stage');
+    if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen || function () {}).call(el);
+  };
+  function wakeBar() {
+    $('bar').classList.remove('hide');
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(function () { $('bar').classList.add('hide'); }, 3500);
+  }
+  ['mousemove', 'touchstart', 'click', 'keydown'].forEach(function (ev) { $('v-stage').addEventListener(ev, wakeBar); });
+
+  /* ---------------- auto-join from link ---------------- */
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var room = q.get('room');
+    if (!room) return;
+    $('j-room').value = room;
+    var m = /(?:^|[#&])pw=([^&]*)/.exec(location.hash);
+    if (m) {
+      try { $('j-pass').value = decodeURIComponent(m[1]); } catch (e) {}
+      history.replaceState(null, '', location.pathname + location.search);
+      $('j-go').click();
+    } else {
+      $('j-pass').focus();
+    }
+  })();
+})();
+</script>
+</body>
+</html>

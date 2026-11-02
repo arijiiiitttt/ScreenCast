@@ -1,0 +1,9 @@
+{
+  "name": "screencast",
+  "version": "1.0.0",
+  "description": "Screen Cast - share your screen to any browser with a room code and password",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=16" },
+  "dependencies": { "ws": "^8.18.0" }
+}
