@@ -4,7 +4,8 @@
   "description": "Screen Cast signaling server (WebSocket rooms + passwords). Deploy separately from the client.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node --env-file=.env server.js"
   },
   "engines": {
     "node": ">=16"

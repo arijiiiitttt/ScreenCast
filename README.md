@@ -1,6 +1,6 @@
 <p align="center">
   <a>
-    <img alt="screen cast logo" src="/client/logo/tv.png" height="150">
+    <img alt="screen cast logo" src="/public/logo/tv.png" height="150">
   </a>
 </p>
 <p align="center">
@@ -98,6 +98,10 @@ Skipping the build step also works: put the URL in `client/config.js` by hand an
 ### 3. Connect them
 
 Go back to the server and set `ALLOWED_ORIGINS` to the client's URL (no trailing slash; separate several with commas), then redeploy it. Open the client and start a room.
+
+### Env files
+
+Both folders have a `.env.example`. For local use copy it to `.env` (git-ignored). Server: `npm run dev` loads `server/.env` (needs Node 20.6+; `npm start` doesn't read it, so set variables in your shell or host dashboard there). Client: `npm run build` reads `client/.env`. On hosting platforms, set the same names in the dashboard instead.
 
 ### Render shortcut
 
@@ -253,12 +257,15 @@ flowchart LR
 screencast/
 ├── server/
 │   ├── server.js          # Signaling: rooms, passwords, relays, origin check
+│   ├── .env.example       # PORT, ALLOWED_ORIGINS, MAX_*, ICE_SERVERS
 │   ├── package.json       # Only dependency is "ws"
 │   ├── package-lock.json
 │   └── bun.lock
 ├── client/
 │   ├── index.html         # Home, host setup, live host page and full-screen viewer
 │   ├── config.js          # Sets window.SCREENCAST_SERVER (server address)
+│   ├── build.js           # Writes config.js from SCREENCAST_SERVER
+│   ├── .env.example       # SCREENCAST_SERVER
 │   ├── logo/tv.png
 │   ├── _headers           # Security/cache headers for Netlify / Cloudflare Pages
 │   └── package.json       # `dev` and `build` (writes config.js from env)
