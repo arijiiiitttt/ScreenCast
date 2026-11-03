@@ -90,10 +90,10 @@ Vercel, Netlify, Cloudflare Pages, GitHub Pages, Render Static, S3: anything tha
 | --- | --- |
 | Root directory | `client` |
 | Build command | `npm run build` |
-| Output directory | `.` (the `client` folder itself) |
+| Output directory | `dist` |
 | Env var | `SCREENCAST_SERVER` = the server URL from step 1 |
 
-Skipping the build step also works: put the URL in `client/config.js` by hand and publish the folder as is.
+Skipping the build also works: put the URL in `client/config.js` by hand and publish the `client` folder as is (output directory `.`). Vercel reads `client/vercel.json`, so it needs no extra settings beyond the root directory and the env var.
 
 ### 3. Connect them
 
@@ -101,7 +101,7 @@ Go back to the server and set `ALLOWED_ORIGINS` to the client's URL (no trailing
 
 ### Env files
 
-Both folders have a `.env.example`. For local use copy it to `.env` (git-ignored). Server: `npm run dev` loads `server/.env` (needs Node 20.6+; `npm start` doesn't read it, so set variables in your shell or host dashboard there). Client: `npm run build` reads `client/.env`. On hosting platforms, set the same names in the dashboard instead.
+Both folders have a `.env.example`. For local use copy it to `.env` (git-ignored). Server: `npm run dev` loads `server/.env` (needs Node 20.6+; `npm start` doesn't read it, so set variables in your shell or host dashboard there). Client: `npm run build` reads `client/.env` and builds into `client/dist`. On hosting platforms, set the same names in the dashboard instead.
 
 ### Render shortcut
 
@@ -268,7 +268,8 @@ screencast/
 │   ├── .env.example       # SCREENCAST_SERVER
 │   ├── logo/tv.png
 │   ├── _headers           # Security/cache headers for Netlify / Cloudflare Pages
-│   └── package.json       # `dev` and `build` (writes config.js from env)
+│   ├── vercel.json        # Vercel: output dir `dist`, headers
+│   └── package.json       # `dev` and `build` (builds dist/, writes config.js from env)
 ├── render.yaml            # Optional Render Blueprint creating both services
 ├── README.md
 └── .gitignore
