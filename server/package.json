@@ -1,0 +1,15 @@
+{
+  "name": "screencast",
+  "version": "1.0.0",
+  "description": "Screen Cast signaling server (WebSocket rooms + passwords). Deploy separately from the client.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

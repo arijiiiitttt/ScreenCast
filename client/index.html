@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Screen Cast - your screen on every screen</title>
-<link rel="icon" type="image/png" href="./public/logo/tv.png">
+<link rel="icon" type="image/png" href="./logo/tv.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
@@ -300,10 +300,19 @@ video.prev{width:100%;aspect-ratio:16/9;background:#0b0e14;border:2px solid var(
 
 <div id="toast"></div>
 
+<script src="./config.js"></script>
 <script>
 (function () {
   var $ = function (id) { return document.getElementById(id); };
-  var WS_URL = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  // Signaling server address comes from config.js (window.SCREENCAST_SERVER).
+  // Accepts https://x, http://x, wss://x or ws://x.
+  var SERVER = String(window.SCREENCAST_SERVER || '').trim().replace(/\/+$/, '');
+  if (!SERVER && /^(localhost|127\.0\.0\.1)$/.test(location.hostname)) SERVER = 'http://localhost:3000';
+  var WS_URL = SERVER
+    ? SERVER.replace(/^http/, 'ws')
+    : (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  // Free hosts put idle servers to sleep: poke it now so it is awake by the time someone clicks Start/Watch.
+  if (SERVER) { try { fetch(WS_URL.replace(/^ws/, 'http') + '/health', { mode: 'no-cors', cache: 'no-store' }); } catch (e) {} }
   var ICE = [];
 
   // kbps values: min / start / max bitrate per viewer

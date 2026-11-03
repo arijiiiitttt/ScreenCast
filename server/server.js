@@ -1,8 +1,7 @@
 // Screen Cast signaling server. Video goes directly between browsers (WebRTC);
-// this server only introduces them to each other and serves the web page.
+// this server only introduces them to each other. The web page is deployed
+// separately (see ../client).
 const http = require('http');
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 const { WebSocketServer } = require('ws');
 
@@ -17,14 +16,22 @@ if (process.env.ICE_SERVERS) {
   try { ICE = JSON.parse(process.env.ICE_SERVERS); } catch (e) { console.error('ICE_SERVERS is not valid JSON, using defaults'); }
 }
 
-const html = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
-const HEAD = { 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'no-referrer', 'Cache-Control': 'no-store' };
+// Comma-separated list of website origins allowed to open a WebSocket, e.g.
+// ALLOWED_ORIGINS=https://screencast.vercel.app,https://cast.example.com
+// Empty = allow any origin (fine for testing; set it in production).
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '')
+  .split(',').map((s) => s.trim().replace(/\/+$/, '').toLowerCase()).filter(Boolean);
+
+function originAllowed(origin) {
+  if (!ALLOWED_ORIGINS.length) return true;
+  return !!origin && ALLOWED_ORIGINS.includes(String(origin).replace(/\/+$/, '').toLowerCase());
+}
 
 const server = http.createServer((req, res) => {
   const url = req.url.split('?')[0];
-  if (url === '/' || url === '/index.html') {
-    res.writeHead(200, Object.assign({ 'Content-Type': 'text/html; charset=utf-8' }, HEAD));
-    res.end(html);
+  if (url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Screen Cast signaling server');
   } else if (url === '/health') {
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('ok');
@@ -34,7 +41,11 @@ const server = http.createServer((req, res) => {
   }
 });
 
-const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 });
+const wss = new WebSocketServer({
+  server,
+  maxPayload: 64 * 1024,
+  verifyClient: (info) => originAllowed(info.origin || info.req.headers.origin),
+});
 const rooms = new Map();   // code -> { host, passHash, hasPass, viewers:Map, nextId }
 const fails = new Map();   // ip -> { n, t }
 
@@ -126,4 +137,4 @@ setInterval(() => {
   fails.forEach((f, ip) => { if (now - f.t >= WINDOW) fails.delete(ip); });
 }, 25000);
 
-server.listen(PORT, () => console.log('Screen Cast running on port ' + PORT));
+server.listen(PORT, () => console.log('Screen Cast signaling server on port ' + PORT + (ALLOWED_ORIGINS.length ? ' (origins: ' + ALLOWED_ORIGINS.join(', ') + ')' : ' (any origin)')));

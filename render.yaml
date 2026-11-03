@@ -1,8 +1,23 @@
+# Optional Render Blueprint: creates both services, still deployed independently.
 services:
   - type: web
-    name: screencast
+    name: screencast-server
     runtime: node
     plan: free
+    rootDir: server
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /health
+    envVars:
+      - key: ALLOWED_ORIGINS        # your client URL, e.g. https://screencast-client.onrender.com
+        sync: false
+
+  - type: web
+    name: screencast-client
+    runtime: static
+    rootDir: client
+    buildCommand: npm run build
+    staticPublishPath: .
+    envVars:
+      - key: SCREENCAST_SERVER      # your server URL, e.g. https://screencast-server.onrender.com
+        sync: false

@@ -23,32 +23,36 @@
 ## Table of contents
 
 1. [Run it](#run-it)
-2. [Using Screen Cast](#using-screen-cast)
-3. [Configuration](#configuration)
-4. [Services](#services)
-5. [Hardware and network notes](#hardware-and-network-notes)
-6. [Architecture](#architecture)
-7. [Design decisions](#design-decisions)
-8. [Project layout](#project-layout)
-9. [Testing](#testing)
-10. [Local development](#local-development)
-11. [Extending](#extending)
-12. [Troubleshooting](#troubleshooting)
-13. [Known limitations](#known-limitations)
-14. [Credits](#credits)
+2. [Put it online](#put-it-online)
+3. [Using Screen Cast](#using-screen-cast)
+4. [Configuration](#configuration)
+5. [Services](#services)
+6. [Hardware and network notes](#hardware-and-network-notes)
+7. [Architecture](#architecture)
+8. [Design decisions](#design-decisions)
+9. [Project layout](#project-layout)
+10. [Testing](#testing)
+11. [Local development](#local-development)
+12. [Extending](#extending)
+13. [Troubleshooting](#troubleshooting)
+14. [Known limitations](#known-limitations)
+15. [Credits](#credits)
 
 
 
 ## Run it
 
-You need **Node.js 16 or newer**. There is no database and no build step.
+You need **Node.js 16 or newer**. There is no database. The project is two independent pieces: `server/` (signaling) and `client/` (static web page).
 
 ```bash
-npm install
-npm start
+# terminal 1: signaling server on :3000
+cd server && npm install && npm start
+
+# terminal 2: web page on :5173
+cd client && npm run dev
 ```
 
-Open **http://localhost:3000**.
+Open **http://localhost:5173**. With no server address configured, a page opened on `localhost` talks to `http://localhost:3000` automatically.
 
 | Setup | Result |
 | --- | --- |
@@ -57,6 +61,53 @@ Open **http://localhost:3000**.
 | Viewer, any modern browser on any OS | Watches with nothing to install |
 | Host on a phone or tablet | Not possible, mobile browsers cannot share their screen |
 
+
+
+
+## Put it online
+
+Deploy the two folders as two separate projects. **Order matters: server first**, because the client needs the server's URL and the server needs the client's URL.
+
+### 1. Server (needs a host that keeps a process running)
+
+Render, Railway, Fly.io, a VPS: anything that runs Node and supports WebSockets. Vercel and Netlify functions do **not** work for this part.
+
+| Setting | Value |
+| --- | --- |
+| Root directory | `server` |
+| Build command | `npm install` |
+| Start command | `npm start` |
+| Health check path | `/health` |
+| Env var (later) | `ALLOWED_ORIGINS` = the client URL |
+
+Note the URL you get, e.g. `https://screencast-server.onrender.com`.
+
+### 2. Client (any static host)
+
+Vercel, Netlify, Cloudflare Pages, GitHub Pages, Render Static, S3: anything that serves files.
+
+| Setting | Value |
+| --- | --- |
+| Root directory | `client` |
+| Build command | `npm run build` |
+| Output directory | `.` (the `client` folder itself) |
+| Env var | `SCREENCAST_SERVER` = the server URL from step 1 |
+
+Skipping the build step also works: put the URL in `client/config.js` by hand and publish the folder as is.
+
+### 3. Connect them
+
+Go back to the server and set `ALLOWED_ORIGINS` to the client's URL (no trailing slash; separate several with commas), then redeploy it. Open the client and start a room.
+
+### Render shortcut
+
+`render.yaml` at the repo root creates both services in one go. Fill in `SCREENCAST_SERVER` and `ALLOWED_ORIGINS` when prompted, or afterwards in each service's Environment tab.
+
+### Good to know
+
+- Use `https://` for the client. Browsers only allow screen capture there, and an HTTPS page can only open `wss://` connections, so the server must be HTTPS too (all hosts above do this by default).
+- On free plans the server sleeps when idle. The page wakes it as soon as it loads, but the first connection can take up to about a minute.
+- A change to either folder only needs that one project redeployed. Changing the server URL means rebuilding the client.
 
 
 
@@ -92,14 +143,23 @@ Capture is limited to 2560x1440 so text stays sharp without overloading the host
 
 ## Configuration
 
-Server settings are environment variables. All are optional.
+Settings are environment variables. All are optional locally; set the two marked **production** when you deploy.
+
+**Server** (`server/`)
 
 | Variable | Default | Why |
 | --- | --- | --- |
-| `PORT` | `3000` | Port the site and signaling listen on (Render sets this itself) |
+| `PORT` | `3000` | Port the signaling server listens on (Render sets this itself) |
+| `ALLOWED_ORIGINS` | any | **Production.** Comma-separated website URLs allowed to connect, e.g. `https://screencast.vercel.app`. Other sites get rejected |
 | `MAX_VIEWERS` | `20` | Viewers per room; each one costs the host a separate upload stream |
 | `MAX_ROOMS` | `200` | Rooms alive at once on this server |
 | `ICE_SERVERS` | Google public STUN | JSON list of STUN/TURN servers, needed on strict networks |
+
+**Client** (`client/`)
+
+| Variable | Default | Why |
+| --- | --- | --- |
+| `SCREENCAST_SERVER` | empty | **Production.** Your server's URL, e.g. `https://screencast-server.onrender.com`. Written into `config.js` by `npm run build`. You can also edit `client/config.js` by hand |
 
 `ICE_SERVERS` example (adds a relay):
 
@@ -124,11 +184,11 @@ Invalid room codes and codes already in use are rejected before sharing starts.
 
 | Path | Purpose |
 | --- | --- |
-| `/` | The website (host and viewer screens in one page) |
+| `/` | Plain text banner (the server no longer serves the page) |
 | `/health` | Plain `ok` response for hosting health checks |
-| `ws(s)://<same host>/` | WebSocket signaling used by the page |
+| `ws(s)://<server host>/` | WebSocket signaling used by the page |
 
-Everything runs from one process on one port.
+The website is served separately from `client/`.
 
 
 
@@ -183,7 +243,7 @@ flowchart LR
 - **Sharp by default.** Sharp mode sets the video `contentHint` to `detail` so the browser keeps resolution instead of dropping it; Smooth and Max use `motion` (keep frame rate). All modes also ask the sending browser for a higher minimum and starting bitrate (through `x-google-*` codec parameters on the viewer's answer) so the picture does not begin blurry while the network estimate warms up.
 - **Dead connections are cleaned up.** The server pings every 25 seconds and drops sockets that stop answering; this also keeps hosting platforms from closing idle connections.
 - **A TV test pattern as the identity.** The color bars (the signal you see when a channel is waiting) run along the top of every page, appear in the logo, and fill the viewer's screen while it connects; the same pattern turns grey when the host stops. Buttons and room-code characters share one look: ink outline, hard bottom edge, and a press-down effect.
-- **One file for the whole interface.** `public/index.html` has the page, styles and logic, so there is no frontend build.
+- **One file for the whole interface.** `client/index.html` has the page, styles and logic, so there is no frontend build.
 
 
 
@@ -191,21 +251,29 @@ flowchart LR
 
 ```
 screencast/
-├── server.js          # Node server: serves the page, rooms, passwords, relays signaling
-├── package.json       # Project info; the only dependency is "ws"
-├── render.yaml        # Ready-made Render settings
-├── README.md          # This file
-├── .gitignore         # Keeps node_modules out of GitHub
-└── public/
-    └── index.html     # Home, host setup, live host page and full-screen viewer
+├── server/
+│   ├── server.js          # Signaling: rooms, passwords, relays, origin check
+│   ├── package.json       # Only dependency is "ws"
+│   ├── package-lock.json
+│   └── bun.lock
+├── client/
+│   ├── index.html         # Home, host setup, live host page and full-screen viewer
+│   ├── config.js          # Sets window.SCREENCAST_SERVER (server address)
+│   ├── logo/tv.png
+│   ├── _headers           # Security/cache headers for Netlify / Cloudflare Pages
+│   └── package.json       # `dev` and `build` (writes config.js from env)
+├── render.yaml            # Optional Render Blueprint creating both services
+├── README.md
+└── .gitignore
 ```
 
 | Path | Role |
 | --- | --- |
-| `server.js` | HTTP for `/` and `/health`, WebSocket signaling, room table, throttling, heartbeat |
-| `public/index.html` | The entire interface and the WebRTC code for both host and viewer |
-| `render.yaml` | Web service definition: Node, free plan, `npm install`, `npm start`, `/health` check |
-| `package.json` | Node 16+ requirement and the `ws` dependency |
+| `server/server.js` | HTTP `/` and `/health`, WebSocket signaling, room table, throttling, heartbeat, origin allow-list |
+| `client/index.html` | The entire interface and the WebRTC code for both host and viewer |
+| `client/config.js` | The one place the client learns the server's address |
+
+The two folders share nothing at runtime except the WebSocket messages listed under Architecture, so each can be deployed, scaled and redeployed on its own.
 
 
 
@@ -213,12 +281,12 @@ screencast/
 
 There is no automated test suite yet. A quick manual check after any change:
 
-1. `npm start`, open `http://localhost:3000` in two browser windows.
+1. Start the server and the client (see Local development), open `http://localhost:5173` in two browser windows.
 2. Window A: **Start a room**, share a window. Window B: join with the code and password; the video should appear within a few seconds.
 3. Join with a wrong password: you should see "Wrong password."
 4. Join with an unknown code: you should see "Room not found."
 5. Stop sharing in window A: window B should show "The host stopped sharing."
-6. Join from a second device on the same Wi-Fi using `http://<host-ip>:3000` to check cross-device playback.
+6. Join from a second device on the same Wi-Fi using the client's network address (see Local development) to check cross-device playback.
 
 The signaling server (room creation, duplicate rooms, password checks, relaying, viewer leave, host end, `/health`) was checked with a scripted WebSocket client. Live video in real browsers should be verified on your own devices after deploying.
 
@@ -227,23 +295,25 @@ The signaling server (room creation, duplicate rooms, password checks, relaying,
 ## Local development
 
 ```bash
-npm install
-PORT=4000 npm start        # use another port if 3000 is busy
+cd server && npm install && PORT=4000 npm start     # another port if 3000 is busy
+cd client && npm run dev
 ```
 
-- Edit `public/index.html` and refresh the page; the server reads the file at start-up, so restart `npm start` after changes.
-- To test across devices on your network, viewers can open `http://<your-ip>:3000`. The **host** still needs `localhost` or HTTPS, so run the host window on the machine that runs the server, or deploy.
+- Edit `client/index.html` and refresh: no restart needed, it is a static file.
+- Restart the server after editing `server/server.js`.
+- If you changed the server port, set `window.SCREENCAST_SERVER = 'http://localhost:4000'` in `client/config.js` (don't commit that).
+- To test across devices on your network, put your machine's address in `client/config.js` and open the client from it. The **host** still needs `localhost` or HTTPS, so run the host window on the machine that runs the client, or deploy.
 - Set `ICE_SERVERS` in your shell to try a TURN relay locally.
 
 
 
 ## Extending
 
-- **Change the quality modes** — the `MODES` table at the top of the script in `public/index.html` holds frame rate, content hint and min/start/max bitrate (kbps) for each mode; the capture size limit is in the `getDisplayMedia` call.
+- **Change the quality modes** — the `MODES` table at the top of the script in `client/index.html` holds frame rate, content hint and min/start/max bitrate (kbps) for each mode; the capture size limit is in the `getDisplayMedia` call.
 - **Raise or lower limits** — set `MAX_VIEWERS` and `MAX_ROOMS`.
-- **Rebrand** — colors are CSS variables at the top of `public/index.html` (`--yel` for buttons and room-code keys, `--ink`, `--paper`); the test-pattern colors are the `BARS` list in the script; the name is in the `<title>` and the brand blocks.
-- **Viewer names** — add a `name` field to the `join` message in `onJoin` (`server.js`), pass it in the `viewer` message to the host, and show it in the host page.
-- **Real accounts or per-room owners** — put your check in `onHost` and `onJoin` in `server.js`.
+- **Rebrand** — colors are CSS variables at the top of `client/index.html` (`--yel` for buttons and room-code keys, `--ink`, `--paper`); the test-pattern colors are the `BARS` list in the script; the name is in the `<title>` and the brand blocks.
+- **Viewer names** — add a `name` field to the `join` message in `onJoin` (`server/server.js`), pass it in the `viewer` message to the host, and show it in the host page.
+- **Real accounts or per-room owners** — put your check in `onHost` and `onJoin` in `server/server.js`.
 - **A TURN relay for strict networks** — run your own (for example coturn) or use a hosted one, then set `ICE_SERVERS`.
 - **New message type** — handle it in the `message` switch in `server.js` and in the matching `onmessage` in `index.html`.
 
@@ -265,6 +335,7 @@ PORT=4000 npm start        # use another port if 3000 is busy
 | Text looks soft or blurry | Use **Sharp** mode, share a window instead of a huge screen, and check the host's upload speed (8 Mbps per viewer in Sharp mode); Smooth and Max favor frame rate over clarity |
 | Choppy video | Fewer viewers, **Sharp** mode, or a faster connection for the host |
 | Mirror-in-mirror tunnel on the host preview | Share a different window or screen than the one showing the Screen Cast page |
+| Page loads but hosting or watching fails right away | `SCREENCAST_SERVER` not set or wrong, or the client URL is missing from the server's `ALLOWED_ORIGINS` |
 | Port already in use locally | Start with another port: `PORT=4000 npm start` |
 
 
